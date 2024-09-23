@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from ast import NodeTransformer, Module
 from typing import final
 
@@ -8,6 +8,7 @@ from transformers.OptimizeLevel import OptimizeLevel
 
 
 class ITransformer(NodeTransformer, ABC):
+    @abstractmethod
     def __init__(self, name: str, level: OptimizeLevel):
         self.logger = Const.logger
         self.name = name

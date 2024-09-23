@@ -9,6 +9,7 @@ from log.Logger import Logger
 from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.ConstantFolding import ConstantFolding
+from transformers.impl.DeadCodeElimination import DeadCodeElimination
 
 if TYPE_CHECKING:
     from Pylang import Pylang
@@ -27,11 +28,11 @@ class TransManager:
         self.transformers: dict[Type[ITransformer], ITransformer] = dict()
 
     def register(self):
-        self._doRegister(ConstantFolding())
-
-    def _doRegister(self, transformer: ITransformer):
-        self.transformers[type(transformer)] = transformer
-        transformer.onRegister()
+        def doRegister(transformer: ITransformer):
+            self.transformers[type(transformer)] = transformer
+            transformer.onRegister()
+        doRegister(ConstantFolding())
+        doRegister(DeadCodeElimination())
 
     def parse(self, file: TextIO):
         try:
@@ -55,7 +56,6 @@ class TransManager:
             cycle += 1
             isFinish = True
 
-            self.logger.info(f"Transforming cycle: {cycle}")
             for source, module in self.modules.items():
                 for transformer in self.transformers.values():
                     if not transformer.checkLevel():
@@ -65,11 +65,12 @@ class TransManager:
                     module = transformer.visit(module)
                     transformer.onPostTransform()
 
+                    # Make sure there's nothing to optimize
                     if transformer.isChanged():
                         isFinish = False
                     ast.fix_missing_locations(module)
                 self.modules[source] = module
-            self.logger.debug(isFinish)
+            self.logger.info(f"Transforming cycle: {cycle}")
         self.logger.info("Transform done!")
 
         result: list[Source] = list()
