@@ -41,6 +41,7 @@ class ITransformer(NodeTransformer, ABC):
 
     @final
     def checkLevel(self) -> bool:
+        # todo why??? why Const.transManager.level always equal to 1
         return Const.transManager.level >= self.level
 
     def _onRegister(self) -> None: ...

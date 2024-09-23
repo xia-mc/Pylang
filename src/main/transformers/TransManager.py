@@ -10,6 +10,7 @@ from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.ConstantFolding import ConstantFolding
 from transformers.impl.DeadCodeElimination import DeadCodeElimination
+from transformers.impl.LoopUnfolding import LoopUnfolding
 
 if TYPE_CHECKING:
     from Pylang import Pylang
@@ -33,6 +34,7 @@ class TransManager:
             transformer.onRegister()
         doRegister(ConstantFolding())
         doRegister(DeadCodeElimination())
+        doRegister(LoopUnfolding())
 
     def parse(self, file: TextIO):
         try:
