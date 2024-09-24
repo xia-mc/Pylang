@@ -17,7 +17,7 @@ if __name__ == '__main__':
     """
         A multi-line string
     """
-    a = """
+    a: str = """
     A multi-line string
     """
     print(a)

@@ -27,6 +27,7 @@ class LoopUnfolding(ITransformer):
                 body.append(target_assignment)
                 body.extend(node.body)
 
+            self.done()
             # return 'Module' object instanced of 'For' object.
             return ast.copy_location(Module(body=body, type_ignores=[]), node)
 

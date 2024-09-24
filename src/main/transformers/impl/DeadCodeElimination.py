@@ -12,6 +12,7 @@ class DeadCodeElimination(ITransformer):
         self.generic_visit(node)
 
         if isinstance(node.test, ast.Constant):
+            self.done()
             if node.test.value:
                 return node.body
             else:
@@ -26,6 +27,7 @@ class DeadCodeElimination(ITransformer):
 
         if isinstance(node.test, ast.Constant):
             if not node.test.value:
+                self.done()
                 return []
         return node
 
@@ -33,6 +35,7 @@ class DeadCodeElimination(ITransformer):
         self.generic_visit(node)
 
         if isinstance(node.test, ast.Constant):
+            self.done()
             if node.test.value:
                 return node.body
             else:

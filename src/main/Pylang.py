@@ -4,10 +4,10 @@ import os
 import sys
 
 import Const
-from transformers.TransManager import TransManager
 from log.LogLevel import LogLevel
 from log.Logger import Logger
 from transformers.OptimizeLevel import OptimizeLevel
+from transformers.TransManager import TransManager
 
 
 class Pylang:

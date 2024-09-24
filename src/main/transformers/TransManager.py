@@ -12,6 +12,7 @@ from transformers.impl.ConstantFolding import ConstantFolding
 from transformers.impl.DeadCodeElimination import DeadCodeElimination
 from transformers.impl.DocumentRemover import DocumentRemover
 from transformers.impl.LoopUnfolding import LoopUnfolding
+from transformers.impl.UnusedVariableRemover import UnusedVariableRemover
 
 if TYPE_CHECKING:
     from Pylang import Pylang
@@ -26,17 +27,19 @@ class TransManager:
         self.level = level
         self.sources: list[Source] = []
         """Raw sources from file. key: filename, value: Source object."""
-        self.modules: dict[Source, Module] = dict()
-        self.transformers: dict[Type[ITransformer], ITransformer] = dict()
+        self.modules: dict[Source, Module] = {}
+        self.transformers: dict[Type[ITransformer], ITransformer] = {}
 
     def register(self):
         def doRegister(transformer: ITransformer):
             self.transformers[type(transformer)] = transformer
             transformer.onRegister()
+
         doRegister(ConstantFolding())
         doRegister(DeadCodeElimination())
         doRegister(LoopUnfolding())
         doRegister(DocumentRemover())
+        doRegister(UnusedVariableRemover())
 
     def parse(self, file: TextIO):
         try:

@@ -13,14 +13,14 @@ class ITransformer(NodeTransformer, ABC):
         self.logger = Const.logger
         self.name = name
         self.level = level
-        self.changes: int = 0
+        self.changed = False
 
     @final
     def done(self):
-        self.changes += 1
+        self.changed = True
 
     def isChanged(self):
-        return self.changes > 0
+        return self.changed
 
     @final
     def onRegister(self):
@@ -32,7 +32,7 @@ class ITransformer(NodeTransformer, ABC):
 
     @final
     def onPreTransform(self):
-        self.changes = 0
+        self.changed = False
         self._onPreTransform()
 
     @final
@@ -41,10 +41,12 @@ class ITransformer(NodeTransformer, ABC):
 
     @final
     def checkLevel(self) -> bool:
-        # todo why??? why Const.transManager.level always equal to 1
         return Const.transManager.level >= self.level
 
     def _onRegister(self) -> None: ...
+
     def _onParseModule(self, module: Module, source: Source) -> None: ...
+
     def _onPreTransform(self) -> None: ...
+
     def _onPostTransform(self) -> None: ...
