@@ -18,7 +18,7 @@ class DeadCodeElimination(ITransformer):
                 if node.orelse:
                     return node.orelse
                 else:
-                    return list()
+                    return []
         return node
 
     def visit_While(self, node):
@@ -26,7 +26,7 @@ class DeadCodeElimination(ITransformer):
 
         if isinstance(node.test, ast.Constant):
             if not node.test.value:
-                return list()
+                return []
         return node
 
     def visit_IfExp(self, node):

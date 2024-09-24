@@ -20,7 +20,7 @@ class Pylang:
         level = OptimizeLevel.O1
         logLevel = LogLevel.INFO
         logToFile = False
-        filenames: list[str] = list()
+        filenames: list[str] = []
         outputPath: str = r".\out"
 
         try:
@@ -28,13 +28,13 @@ class Pylang:
             while index < len(args):
                 arg = args[index].lower()
                 match arg:
-                    case "-O0":
+                    case "-o0":
                         level = OptimizeLevel.O0
-                    case "-O1":
+                    case "-o1":
                         level = OptimizeLevel.O1
-                    case "-O2":
+                    case "-o2":
                         level = OptimizeLevel.O2
-                    case "-O3":
+                    case "-o3":
                         level = OptimizeLevel.O3
                     case "-critical":
                         logLevel = LogLevel.CRITICAL

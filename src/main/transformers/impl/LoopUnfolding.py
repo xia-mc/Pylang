@@ -1,6 +1,6 @@
 import ast
-from ast import Constant, Call, Name, Assign, Module
-from typing import Any, SupportsIndex
+from ast import Constant, Call, Name, Assign, For, Module
+from typing import Any, Optional, Tuple, SupportsIndex
 
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
@@ -13,29 +13,36 @@ class LoopUnfolding(ITransformer):
     def visit_For(self, node):
         self.generic_visit(node)
 
-        if (isinstance(node.iter, Call) and isinstance(node.iter.func, Name)
-                and node.iter.func.id == range.__name__):  # If they overwrite range function, then crash lol
-            evalRange = self.evaluate_range(node.iter)
+        if self.isRangeLoop(node):
+            assert isinstance(node.iter, Call)
+            evalRange = self.evaluateRange(node.iter)
             if evalRange is None:
                 return node
 
             start, end, step = evalRange
-            body = list()
+            body = []
+
             for i in range(start, end, step):
-                target_assignment = Assign(targets=node.target, value=Constant(value=i))
+                target_assignment = Assign(targets=[node.target], value=Constant(value=i))
                 body.append(target_assignment)
                 body.extend(node.body)
 
-            return ast.copy_location(Module(body=body), node)
+            # return 'Module' object instanced of 'For' object.
+            return ast.copy_location(Module(body=body, type_ignores=[]), node)
 
         return node
 
     @staticmethod
-    def evaluate_range(rangeExpr: Call) -> tuple[SupportsIndex, SupportsIndex, SupportsIndex] | None:
-        """
-        :param rangeExpr: an expr object with range function.
-        :return: start, stop, step. or none means can't be evaluated.
-        """
+    def isRangeLoop(node: For):
+        return (isinstance(node.iter, Call)
+                and isinstance(node.iter.func, Name)
+                and node.iter.func.id == range.__name__)
+        # TODO If the range function has been overridden, then we will unfold it incorrectly.
+        # But I can't check every function in the file and libraries
+        # IDK how to fix it
+
+    @staticmethod
+    def evaluateRange(rangeExpr: Call) -> Optional[Tuple[SupportsIndex, SupportsIndex, SupportsIndex]]:
         def getOrThrow(expr) -> Any:
             if isinstance(expr, Constant):
                 return expr.value

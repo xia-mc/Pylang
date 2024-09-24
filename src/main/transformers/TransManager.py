@@ -10,6 +10,7 @@ from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.ConstantFolding import ConstantFolding
 from transformers.impl.DeadCodeElimination import DeadCodeElimination
+from transformers.impl.DocumentRemover import DocumentRemover
 from transformers.impl.LoopUnfolding import LoopUnfolding
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ class TransManager:
         self.pylang = pylang
         self.logger = logger
         self.level = level
-        self.sources: list[Source] = list()
+        self.sources: list[Source] = []
         """Raw sources from file. key: filename, value: Source object."""
         self.modules: dict[Source, Module] = dict()
         self.transformers: dict[Type[ITransformer], ITransformer] = dict()
@@ -35,6 +36,7 @@ class TransManager:
         doRegister(ConstantFolding())
         doRegister(DeadCodeElimination())
         doRegister(LoopUnfolding())
+        doRegister(DocumentRemover())
 
     def parse(self, file: TextIO):
         try:
@@ -75,7 +77,7 @@ class TransManager:
             self.logger.info(f"Transforming cycle: {cycle}")
         self.logger.info("Transform done!")
 
-        result: list[Source] = list()
+        result: list[Source] = []
         for source, module in self.modules.items():
             result.append(Source(source.getFilename(), ast.unparse(module)))
 
