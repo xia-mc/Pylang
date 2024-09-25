@@ -4,6 +4,7 @@ from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 
 
+# TODO Add for/while support
 # TODO Added closure function support
 class UnusedVariableRemover(ITransformer):
     def __init__(self):
@@ -65,7 +66,7 @@ class UnusedVariableRemover(ITransformer):
         node.targets = newTargets
 
         if len(newTargets) == 0:
-            return None
+            return Pass()
 
         return self.generic_visit(node)
 
@@ -86,7 +87,7 @@ class UnusedVariableRemover(ITransformer):
                 return self.generic_visit(node)
 
         self.done()
-        return None
+        return Pass()
 
     def visit_AugAssign(self, node):
         if not isinstance(node.target, Name):
@@ -99,7 +100,7 @@ class UnusedVariableRemover(ITransformer):
             return self.generic_visit(node)
 
         self.done()
-        return None
+        return Pass()
 
     def visit_FunctionDef(self, node):
         self.bypassedVar.clear()
@@ -125,8 +126,4 @@ class UnusedVariableRemover(ITransformer):
 
         node.body = self.newBody
 
-        self.generic_visit(node)
-        if len(node.body) == 0:
-            self.done()
-            node.body.append(Pass())
-        return node
+        return self.generic_visit(node)

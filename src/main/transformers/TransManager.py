@@ -39,7 +39,7 @@ class TransManager:
         doRegister(DeadCodeElimination())
         doRegister(LoopUnfolding())
         doRegister(DocumentRemover())
-        doRegister(UnusedVariableRemover())
+        # doRegister(UnusedVariableRemover())
 
     def parse(self, file: TextIO):
         try:
