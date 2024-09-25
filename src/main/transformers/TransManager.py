@@ -8,11 +8,11 @@ import Const
 from log.Logger import Logger
 from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
-from transformers.impl.ConstantFolding import ConstantFolding
-from transformers.impl.DeadCodeElimination import DeadCodeElimination
-from transformers.impl.DocumentRemover import DocumentRemover
-from transformers.impl.LoopUnfolding import LoopUnfolding
-from transformers.impl.UnusedVariableRemover import UnusedVariableRemover
+from transformers.impl.O1.ConstantFolding import ConstantFolding
+from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
+from transformers.impl.O1.DocumentRemover import DocumentRemover
+from transformers.impl.O2.LoopUnfolding import LoopUnfolding
+from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
 
 if TYPE_CHECKING:
     from Pylang import Pylang

@@ -1,5 +1,4 @@
-import ast
-from ast import Assign, Global, Nonlocal, Constant, Name, Store, Load, stmt, Pass
+from ast import Global, Nonlocal, Constant, Name, Store, Load, stmt, Pass
 
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
@@ -18,7 +17,7 @@ class UnusedVariableRemover(ITransformer):
         self.usedVar: set[str] = set()
 
         self.newBody: list[stmt] = []
-        self.reChecking = False
+        self.recheck = False
 
     def visit_Name(self, node):
         name = node.id
@@ -51,7 +50,7 @@ class UnusedVariableRemover(ITransformer):
                 continue
             if target.id in self.bypassedVar:
                 continue
-            if self.reChecking:
+            if self.recheck:
                 if target.id not in self.firstAssignedVar:
                     continue
                 if target.id in self.usedVar:
@@ -77,7 +76,7 @@ class UnusedVariableRemover(ITransformer):
             return self.generic_visit(node)
         if node.target.id in self.bypassedVar:
             return self.generic_visit(node)
-        if self.reChecking:
+        if self.recheck:
             if node.target.id not in self.firstAssignedVar:
                 return self.generic_visit(node)
             if node.target.id in self.usedVar:
@@ -109,7 +108,7 @@ class UnusedVariableRemover(ITransformer):
         self.usedVar.clear()
 
         self.newBody = node.body
-        self.reChecking = False
+        self.recheck = False
         for i, expr in enumerate(node.body):
             if isinstance(expr, Global) or isinstance(expr, Nonlocal):
                 self.bypassedVar.update(expr.names)
@@ -118,7 +117,7 @@ class UnusedVariableRemover(ITransformer):
             self.generic_visit(expr)
 
         node.body = self.newBody
-        self.reChecking = True
+        self.recheck = True
 
         # re-check
         for expr in node.body:
