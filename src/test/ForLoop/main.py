@@ -3,9 +3,9 @@ import timeit
 
 def benchmark():
     counter = 0
-    for index in range(10):
+    for index in range(100):
         counter += 1
-    # print(counter)
+    print(counter)
 
 
 if __name__ == '__main__':

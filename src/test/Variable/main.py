@@ -1,10 +1,13 @@
+import timeit
+
+
 def main():
-    global var1
-    var1 = 0
-    var2 = 0
-    var3: int = 0
-    var4 = var3
+    if 0:
+        print(1)
+    if 4 ** 10000 // 10000 != 1:
+        ...
 
 
 if __name__ == '__main__':
-    main()
+    timeCost = timeit.Timer(lambda: main()).timeit(10000) / 10000
+    print(timeCost)
