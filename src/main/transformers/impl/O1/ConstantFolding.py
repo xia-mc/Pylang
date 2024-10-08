@@ -10,15 +10,11 @@ class ConstantFolding(ITransformer):
         super().__init__("ConstantFolding", OptimizeLevel.O1)
 
     def visit_If(self, node):
-        self.generic_visit(node)
-
         if isinstance(node.test, Constant):
             node.test = Constant(bool(node.test.value))
-        return node
+        return self.generic_visit(node)
 
     def visit_Compare(self, node):
-        self.generic_visit(node)
-
         if (isinstance(node.left, Constant)
                 and len(node.ops) == 1
                 and len(node.comparators) == 1 and isinstance(node.comparators[0], Constant)):
@@ -58,10 +54,9 @@ class ConstantFolding(ITransformer):
                     self.done()
                     return Constant(left not in right)
 
-        return node
+        return self.generic_visit(node)
 
     def visit_BinOp(self, node):
-        self.generic_visit(node)
         if isinstance(node.left, Constant) and isinstance(node.right, Constant):
             left = node.left.value
             right = node.right.value
@@ -107,4 +102,4 @@ class ConstantFolding(ITransformer):
                     self.done()
                     return Constant(left - right)
 
-        return node
+        return self.generic_visit(node)

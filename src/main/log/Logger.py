@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 import time
-from typing import TextIO, Any
+from typing import TextIO
 
 import Const
 from log.LogLevel import LogLevel
@@ -19,22 +19,22 @@ class Logger:
             self.file.close()
             self.file = None
 
-    def debug(self, *message: Any):
+    def debug(self, *message: object):
         self.log(LogLevel.DEBUG, *message)
 
-    def info(self, *message: Any):
+    def info(self, *message: object):
         self.log(LogLevel.INFO, *message)
 
-    def warn(self, *message: Any):
+    def warn(self, *message: object):
         self.log(LogLevel.WARN, *message)
 
-    def error(self, *message: Any):
+    def error(self, *message: object):
         self.log(LogLevel.ERROR, *message)
 
-    def critical(self, *message: Any):
+    def critical(self, *message: object):
         self.log(LogLevel.CRITICAL, *message)
 
-    def log(self, level: LogLevel, *message: Any):
+    def log(self, level: LogLevel, *message: object):
         if level >= self.level:
             out = self._getOutput()
             timeStr = time.strftime("%H:%M:%S", time.gmtime())

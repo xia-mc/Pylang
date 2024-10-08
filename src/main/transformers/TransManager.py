@@ -4,15 +4,20 @@ import ast
 from ast import Module
 from typing import Type, TextIO, TYPE_CHECKING
 
+from tqdm import tqdm
+
 import Const
+from log.LogLevel import LogLevel
 from log.Logger import Logger
 from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O1.ConstantFolding import ConstantFolding
 from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
 from transformers.impl.O1.DocumentRemover import DocumentRemover
+from transformers.impl.O1.VariableRenamer import VariableRenamer
 from transformers.impl.O2.LoopUnfolding import LoopUnfolding
 from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
+from transformers.impl.O2.VariableInliner import VariableInliner
 
 if TYPE_CHECKING:
     from Pylang import Pylang
@@ -40,21 +45,38 @@ class TransManager:
         doRegister(LoopUnfolding())
         doRegister(DocumentRemover())
         doRegister(UnusedVariableRemover())
+        doRegister(VariableRenamer())
+        # doRegister(VariableInliner())
 
-    def parse(self, file: TextIO):
+    def parse(self, filename: str):
         try:
+            file = self.toFile(filename)
             source = Source(file.name[1::], file.read())
-            assert source not in self.sources, "Parse twice is not allowed."
+            self.sources.append(source)
+
             module = ast.parse(source.getSources())
             self.logger.debug(f"Find module in source {file.name} with {len(module.body)} ast objects.")
             self.modules[source] = module
-            self.sources.append(source)
 
             for transformer in self.transformers.values():
                 transformer.onParseModule(module, source)
         except Exception as e:
-            self.logger.warn(f"Failed to parse {file.name}. ignored.")
-            self.logger.debug(str(e))
+            self.logger.warn(f"Failed to parse {filename}. ignored.")
+            self.logger.debug(type(e).__name__, ": ", str(e))
+
+    @staticmethod
+    def toFile(filename: str) -> TextIO:
+        # 添加更多的编码格式
+        codecs = ["UTF-8", "UTF-16", "ISO-8859-1", "GBK", "ASCII"]
+
+        for codec in codecs:
+            try:
+                file = open(filename, encoding=codec)
+                return file
+            except (UnicodeDecodeError, FileNotFoundError):
+                pass
+
+        raise IOError(f"File {filename} can't be decoded with any supported encoding.")
 
     def transform(self) -> list[Source]:
         cycle = 0
@@ -63,25 +85,50 @@ class TransManager:
             cycle += 1
             isFinish = True
 
-            for source, module in self.modules.items():
-                for transformer in self.transformers.values():
-                    if not transformer.checkLevel():
-                        continue
-
-                    transformer.onPreTransform()
-                    module = transformer.visit(module)
-                    transformer.onPostTransform()
-
-                    # Make sure there's nothing to optimize
-                    if transformer.isChanged():
-                        isFinish = False
-                    ast.fix_missing_locations(module)
-                self.modules[source] = module
             self.logger.info(f"Transforming cycle: {cycle}")
+            with tqdm(total=len(self.transformers) * 4 * len(self.modules.items())) as progress:
+                for source, module in self.modules.items():
+                    transformed = 0
+                    for transformer in self.transformers.values():
+                        if not transformer.checkLevel():
+                            progress.update(4)
+                            continue
+
+                        progress.set_description(f"{transformer.name}: Pre")
+                        progress.update()
+                        transformer.onPreTransform()
+
+                        progress.set_description(f"{transformer.name}: Visit")
+                        progress.update()
+                        module = transformer.visit(module)
+
+                        progress.set_description(f"{transformer.name}: Post")
+                        progress.update()
+                        transformer.onPostTransform()
+
+                        progress.set_description(f"{transformer.name}: Fixing-locations")
+                        progress.update()
+                        ast.fix_missing_locations(module)
+
+                        transformed += 1
+                        # Make sure there's nothing to optimize
+                        if transformer.isChanged():
+                            isFinish = False
+                            # progress.update((len(self.transformers) - transformed) * 4)
+                            # break
+                self.modules[source] = module
+                # self.logger.debug(ast.unparse(module))
         self.logger.info("Transform done!")
 
         result: list[Source] = []
         for source, module in self.modules.items():
             result.append(Source(source.getFilename(), ast.unparse(module)))
+
+        existSources = {e.getFilename() for e in result}
+        for source in self.sources:
+            filename = source.getFilename()
+            if filename not in existSources:
+                result.append(source)
+                existSources.add(filename)
 
         return result

@@ -2,6 +2,7 @@ import ast
 from ast import Constant, Call, Name, Assign, For, Module
 from typing import Any, Optional, Tuple, SupportsIndex
 
+import Const
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 
@@ -15,11 +16,16 @@ class LoopUnfolding(ITransformer):
 
         if self.isRangeLoop(node):
             assert isinstance(node.iter, Call)
+
             evalRange = self.evaluateRange(node.iter)
             if evalRange is None:
                 return node
 
             start, end, step = evalRange
+
+            if (end - start) / step * len(node.body) > Const.LOOP_UNFOLDING_MAX_LINES:
+                return node
+
             body = []
 
             for i in range(start, end, step):
@@ -43,7 +49,7 @@ class LoopUnfolding(ITransformer):
         # IDK how to fix it
 
     @staticmethod
-    def evaluateRange(rangeExpr: Call) -> Optional[Tuple[SupportsIndex, SupportsIndex, SupportsIndex]]:
+    def evaluateRange(rangeExpr: Call) -> Optional[Tuple[int, int, int]]:
         def getOrThrow(expr) -> Any:
             if isinstance(expr, Constant):
                 return expr.value

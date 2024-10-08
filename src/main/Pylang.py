@@ -75,8 +75,7 @@ class Pylang:
         for filename in filenames:
             if not filename.endswith(".py"):
                 continue
-            with open(filename) as file:
-                self.manager.parse(file)
+            self.manager.parse(filename)
         self.logger.info(f"Parsed {len(self.manager.sources)} files.")
 
         output = self.manager.transform()

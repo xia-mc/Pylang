@@ -1,4 +1,4 @@
-from ast import Global, Nonlocal, Constant, Name, Store, Load, stmt, Pass, FunctionDef, For, While, Lambda
+from ast import Global, Nonlocal, Constant, Name, Store, Load, stmt, Pass, Del
 from enum import Enum
 
 from transformers.ITransformer import ITransformer
@@ -70,6 +70,10 @@ class UnusedVariableRemover(ITransformer):
                 self.firstAssignedVar.add(name)
             else:
                 self.assignedVar.add(name)
+        elif isinstance(node.ctx, Del):
+            self.usedVar.discard(name)
+            self.assignedVar.discard(name)
+            self.firstAssignedVar.discard(name)
 
         return self.generic_visit(node)
 
@@ -94,7 +98,7 @@ class UnusedVariableRemover(ITransformer):
         node.targets = newTargets
 
         if len(newTargets) == 0:
-            return Pass()
+            return None
 
         return self.generic_visit(node)
 
@@ -112,7 +116,7 @@ class UnusedVariableRemover(ITransformer):
             return self.generic_visit(node)
 
         self.done()
-        return Pass()
+        return None
 
     def visit_AugAssign(self, node):
         if self.state is State.NONE:
@@ -128,7 +132,7 @@ class UnusedVariableRemover(ITransformer):
             return self.generic_visit(node)
 
         self.done()
-        return Pass()
+        return None
 
     def visit_For(self, node):
         if self.state is State.NONE:
@@ -161,20 +165,20 @@ class UnusedVariableRemover(ITransformer):
         outerAssigned = self.assignedVar.copy()
         outerFirstAssigned = self.firstAssignedVar.copy()
         outerUsed = self.usedVar.copy()
+        outerState = self.state
 
         self.bypassedVar.clear()
         self.assignedVar.clear()
         self.firstAssignedVar.clear()
         self.usedVar.clear()
+        self.state = State.FIRST
 
         # Process the current function's body
         self.newBody = node.body
-        self.state = State.FIRST
         for expr in node.body:
             if isinstance(expr, Global) or isinstance(expr, Nonlocal):
                 self.bypassedVar.update(expr.names)
                 continue
-
             self.generic_visit(expr)
 
         node.body = self.newBody
@@ -184,12 +188,17 @@ class UnusedVariableRemover(ITransformer):
         for expr in node.body:
             self.generic_visit(expr)
 
+        # Remove variables that were first assigned but never used
+        unused_vars = self.firstAssignedVar - self.usedVar
+        for var in unused_vars:
+            self.assignedVar.discard(var)
+
         node.body = self.newBody
 
         # Remove useless pass
         self.newBody = []
         for expr in node.body:
-            if isinstance(expr, Pass) and len(self.newBody) > 0:
+            if isinstance(expr, Pass) and len(node.body) > 1:
                 continue
             self.newBody.append(expr)
         node.body = self.newBody
@@ -199,8 +208,8 @@ class UnusedVariableRemover(ITransformer):
         self.assignedVar = outerAssigned
         self.firstAssignedVar = outerFirstAssigned
         self.usedVar = outerUsed
+        self.state = outerState
 
-        self.state = State.NONE
         return self.generic_visit(node)
 
     def visit_Lambda(self, node):
