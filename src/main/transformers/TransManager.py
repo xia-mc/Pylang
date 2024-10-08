@@ -7,17 +7,15 @@ from typing import Type, TextIO, TYPE_CHECKING
 from tqdm import tqdm
 
 import Const
-from log.LogLevel import LogLevel
 from log.Logger import Logger
 from parsers.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O1.ConstantFolding import ConstantFolding
 from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
-from transformers.impl.O1.DocumentRemover import DocumentRemover
-from transformers.impl.O1.VariableRenamer import VariableRenamer
+from transformers.impl.O0.DocumentRemover import DocumentRemover
+from transformers.impl.O0.VariableRenamer import VariableRenamer
 from transformers.impl.O2.LoopUnfolding import LoopUnfolding
 from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
-from transformers.impl.O2.VariableInliner import VariableInliner
 
 if TYPE_CHECKING:
     from Pylang import Pylang

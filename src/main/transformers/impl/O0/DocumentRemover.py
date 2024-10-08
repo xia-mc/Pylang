@@ -6,7 +6,7 @@ from transformers.OptimizeLevel import OptimizeLevel
 
 class DocumentRemover(ITransformer):
     def __init__(self):
-        super().__init__("DocumentRemover", OptimizeLevel.O1)
+        super().__init__("DocumentRemover", OptimizeLevel.O0)
 
     def visit_AnnAssign(self, node):
         self.generic_visit(node)
