@@ -1,4 +1,5 @@
 # Pylang
+[简体中文](https://github.com/xia-mc/Pylang/blob/master/README_CN.md)
 
 **Pylang** is a Python code optimizer based on Abstract Syntax Tree (AST) that performs static analysis to improve code efficiency. It is designed to allow Python developers to write clean, maintainable code while benefiting from optimizations that reduce runtime overhead.
 
