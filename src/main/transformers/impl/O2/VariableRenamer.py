@@ -17,7 +17,7 @@ class VariableRenamer(ITransformer):
     NAME_MAP: list[str] = list("abcdefghijklmnopqrstuvwxyz")
 
     def __init__(self):
-        super().__init__("VariableRenamer", OptimizeLevel.O0)
+        super().__init__("VariableRenamer", OptimizeLevel.O2)
         # global and nonlocal variables
         self.bypassedVar: set[str] = set()
         # the mapping for variable names (old, new)

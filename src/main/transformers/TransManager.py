@@ -13,7 +13,7 @@ from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O1.ConstantFolding import ConstantFolding
 from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
 from transformers.impl.O0.DocumentRemover import DocumentRemover
-from transformers.impl.O0.VariableRenamer import VariableRenamer
+from transformers.impl.O2.VariableRenamer import VariableRenamer
 from transformers.impl.O2.LoopUnfolding import LoopUnfolding
 from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
 
