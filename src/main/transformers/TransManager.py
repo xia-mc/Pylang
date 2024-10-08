@@ -29,7 +29,7 @@ class TransManager:
         self.logger = logger
         self.level = level
         self.sources: list[Source] = []
-        """Raw sources from file. key: filename, value: Source object."""
+        # Raw sources from file. key: filename, value: Source object.
         self.modules: dict[Source, Module] = {}
         self.transformers: dict[Type[ITransformer], ITransformer] = {}
 
