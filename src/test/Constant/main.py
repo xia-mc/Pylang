@@ -10,9 +10,11 @@ def main():
     pass
     pass
 
+
 def func1():
     if False:
         pass
+
 
 if __name__ == '__main__':
     timeCost = timeit.Timer(lambda: main()).timeit(10000) / 10000
