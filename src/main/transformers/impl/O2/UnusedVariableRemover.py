@@ -19,7 +19,7 @@ class UnusedVariableRemover(ITransformer):
         self.bypassedVar: set[str] = set()
         # while loop test variables
         self.tmpBypassedVar: set[str] = set()
-        # items: varName, codeLine(expr index in body, target index in expr.targets)
+        # varName
         self.assignedVar: set[str] = set()
         # unused but it's the first time to assign
         self.firstAssignedVar: set[str] = set()
@@ -162,12 +162,14 @@ class UnusedVariableRemover(ITransformer):
     def visit_FunctionDef(self, node):
         # Save outer scope variables before entering the new function (for closure support)
         outerBypassed = self.bypassedVar.copy()
+        outerTmpBypassed = self.tmpBypassedVar.copy()
         outerAssigned = self.assignedVar.copy()
         outerFirstAssigned = self.firstAssignedVar.copy()
         outerUsed = self.usedVar.copy()
         outerState = self.state
 
         self.bypassedVar.clear()
+        self.tmpBypassedVar.clear()
         self.assignedVar.clear()
         self.firstAssignedVar.clear()
         self.usedVar.clear()
@@ -205,6 +207,7 @@ class UnusedVariableRemover(ITransformer):
 
         # Restore outer scope variables after processing the closure
         self.bypassedVar = outerBypassed
+        self.tmpBypassedVar = outerTmpBypassed
         self.assignedVar = outerAssigned
         self.firstAssignedVar = outerFirstAssigned
         self.usedVar = outerUsed
@@ -219,10 +222,12 @@ class UnusedVariableRemover(ITransformer):
         # We only need to visit the arguments and body (a single expression)
 
         # Save outer scope variables before entering the lambda (for closure support)
-        outer_bypassed = self.bypassedVar.copy()
-        outer_assigned = self.assignedVar.copy()
-        outer_firstAssigned = self.firstAssignedVar.copy()
-        outer_used = self.usedVar.copy()
+        outerBypassed = self.bypassedVar.copy()
+        outerTmpBypassed = self.tmpBypassedVar.copy()
+        outerAssigned = self.assignedVar.copy()
+        outerFirstAssigned = self.firstAssignedVar.copy()
+        outerUsed = self.usedVar.copy()
+        outerState = self.state
 
         # Visit lambda arguments
         for arg in node.args.args:
@@ -233,9 +238,11 @@ class UnusedVariableRemover(ITransformer):
         self.generic_visit(node.body)
 
         # Restore outer scope variables after processing the closure
-        self.bypassedVar = outer_bypassed
-        self.assignedVar = outer_assigned
-        self.firstAssignedVar = outer_firstAssigned
-        self.usedVar = outer_used
+        self.bypassedVar = outerBypassed
+        self.tmpBypassedVar = outerTmpBypassed
+        self.assignedVar = outerAssigned
+        self.firstAssignedVar = outerFirstAssigned
+        self.usedVar = outerUsed
+        self.state = outerState
 
         return node

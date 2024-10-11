@@ -1,3 +1,4 @@
+import random
 from ast import Global, Nonlocal, Store
 from enum import Enum
 
@@ -28,6 +29,10 @@ class VariableRenamer(ITransformer):
         self.inComp = False
 
         self.state = State.NONE
+
+    def _onPreTransform(self) -> None:
+        # fun lol
+        random.shuffle(VariableRenamer.NAME_MAP)
 
     def visit_Name(self, node):
         match self.state:

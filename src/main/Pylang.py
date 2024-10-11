@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import sys
 
+from colorama import Fore
+
 import Const
 from log.LogLevel import LogLevel
 from log.Logger import Logger
@@ -68,7 +70,7 @@ class Pylang:
             exit(1)
 
         self.logger = Logger(logLevel, open("latest.log", "w") if logToFile else None)
-        self.manager = TransManager(self, self.logger, level)
+        self.manager = TransManager(self.logger, level)
         self.manager.register()
 
         self.logger.debug("Start parsing files.")
@@ -80,8 +82,8 @@ class Pylang:
 
         output = self.manager.transform()
         for source in output:
-            path = outputPath + source.getFilename()
-            self.logger.debug(f"Write to {path}")
+            path = (outputPath + source.getFilename()[1::]).replace("\\", "/")
+            self.logger.debug(f"Write to {Fore.CYAN}{path}")
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w") as file:
                 file.write(source.getSources())

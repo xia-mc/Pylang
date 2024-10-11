@@ -1,70 +1,103 @@
 import ast
-from ast import Constant, Call, Name, Assign, For, Module
-from typing import Any, Optional, Tuple, SupportsIndex
+import copy
+import os.path
+from ast import Constant, Call, Name, Assign, Module, List, Load
 
 import Const
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
+from utils.RangeUtils import RangeUtils
 
 
 class LoopUnfolding(ITransformer):
     def __init__(self):
         super().__init__("LoopUnfolding", OptimizeLevel.O2)
+        self.variableMapping: dict[str, Constant] = {}
+        self.working = False
 
     def visit_For(self, node):
-        self.generic_visit(node)
-
-        if self.isRangeLoop(node):
+        if RangeUtils.isRangeLoop(node):
             assert isinstance(node.iter, Call)
 
-            evalRange = self.evaluateRange(node.iter)
+            evalRange = RangeUtils.evaluateRange(node.iter)
             if evalRange is None:
                 return node
 
             start, end, step = evalRange
 
-            if (end - start) / step * len(node.body) > Const.LOOP_UNFOLDING_MAX_LINES:
+            if step == 0:
+                # it will result a value error in runtime
+                self.logger.flag("ValueError: range() arg 3 must not be zero.", node.iter)
+                return node
+            if ((end - start) // step) * len(node.body) > Const.LOOP_UNFOLDING_MAX_LINES:
                 return node
 
             body = []
 
             for i in range(start, end, step):
-                target_assignment = Assign(targets=[node.target], value=Constant(value=i))
-                body.append(target_assignment)
+                targetAssign = Assign(targets=[node.target], value=Constant(value=i))
+                body.append(targetAssign)
                 body.extend(node.body)
 
             self.done()
-            # return 'Module' object instanced of 'For' object.
             return ast.copy_location(Module(body=body, type_ignores=[]), node)
 
-        return node
+        return self.generic_visit(node)
 
-    @staticmethod
-    def isRangeLoop(node: For):
-        return (isinstance(node.iter, Call)
-                and isinstance(node.iter.func, Name)
-                and node.iter.func.id == range.__name__)
-        # TODO If the range function has been overridden, then we will unfold it incorrectly.
-        # But I can't check every function in the file and libraries
-        # IDK how to fix it
-
-    @staticmethod
-    def evaluateRange(rangeExpr: Call) -> Optional[Tuple[int, int, int]]:
-        def getOrThrow(expr) -> Any:
-            if isinstance(expr, Constant):
-                return expr.value
-            raise RuntimeError("Expr can't be evaluated.")
-
-        try:
-            args = rangeExpr.args
-            match len(args):
-                case 1:
-                    return 0, getOrThrow(args[0]), 1
-                case 2:
-                    return getOrThrow(args[0]), getOrThrow(args[1]), 1
-                case 3:
-                    return getOrThrow(args[0]), getOrThrow(args[1]), getOrThrow(args[2])
-                case _:
-                    return None
-        except RuntimeError:
-            return None
+    # TODO IDK why this doesn't work
+    # def visit_ListComp(self, node):
+    #     newGenerators = []
+    #     body = [node.elt]
+    #
+    #     self.variableMapping.clear()
+    #     for generator in node.generators:
+    #         if not RangeUtils.isRangeLoop(generator):
+    #             newGenerators.append(generator)
+    #             continue
+    #
+    #         if not isinstance(generator.target, Name):
+    #             newGenerators.append(generator)
+    #             continue
+    #
+    #         assert isinstance(generator.iter, ast.Call)
+    #
+    #         evalRange = RangeUtils.evaluateRange(generator.iter)
+    #         if evalRange is None:
+    #             newGenerators.append(generator)
+    #             continue
+    #
+    #         start, end, step = evalRange
+    #
+    #         # example: for i in range(100) for j in range(100)
+    #         # then the elements count is 100 * 100
+    #         if (end - start) / step * len(body) > Const.LOOP_UNFOLDING_MAX_LINES:
+    #             self.variableMapping.clear()
+    #             return node
+    #
+    #         newBody = []
+    #         for i in range(start, end, step):
+    #             self.variableMapping[generator.target.id] = Constant(value=i)
+    #
+    #             newElt = copy.deepcopy(node.elt)
+    #             # wtf?
+    #             self.working = True
+    #             self.generic_visit(newElt)
+    #             self.working = False
+    #             newBody.append(newElt)
+    #
+    #         body = newBody
+    #
+    #     if not newGenerators:
+    #         newElt = List(elts=body, ctx=ast.Load())
+    #         return ast.copy_location(newElt, node)
+    #     else:
+    #         return node
+    #
+    # def visit_Name(self, node):
+    #     if not isinstance(node.ctx, Load):
+    #         return self.generic_visit(node)
+    #     if not self.working:
+    #         return self.generic_visit(node)
+    #     if node.id not in self.variableMapping:
+    #         return self.generic_visit(node)
+    #     return self.variableMapping[node.id]

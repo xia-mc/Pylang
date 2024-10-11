@@ -1,37 +1,40 @@
 from __future__ import annotations
 
 import ast
+import os.path
 from ast import Module
-from typing import Type, TextIO, TYPE_CHECKING
+from typing import Type, TextIO, TYPE_CHECKING, Optional
 
+from colorama import Fore
 from tqdm import tqdm
 
 import Const
 from log.Logger import Logger
-from parsers.Source import Source
+from utils.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
+from transformers.impl.O0.DocumentRemover import DocumentRemover
 from transformers.impl.O1.ConstantFolding import ConstantFolding
 from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
-from transformers.impl.O0.DocumentRemover import DocumentRemover
-from transformers.impl.O2.VariableRenamer import VariableRenamer
 from transformers.impl.O2.LoopUnfolding import LoopUnfolding
 from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
+from transformers.impl.O2.VariableRenamer import VariableRenamer
 
 if TYPE_CHECKING:
-    from Pylang import Pylang
     from transformers.ITransformer import ITransformer
 
 
 class TransManager:
-    def __init__(self, pylang: Pylang, logger: Logger, level: OptimizeLevel):
+    def __init__(self, logger: Logger, level: OptimizeLevel):
         Const.transManager = self
-        self.pylang = pylang
         self.logger = logger
         self.level = level
         self.sources: list[Source] = []
         # Raw sources from file. key: filename, value: Source object.
         self.modules: dict[Source, Module] = {}
         self.transformers: dict[Type[ITransformer], ITransformer] = {}
+
+        # state while transforming
+        self.curSource: Optional[Source] = None
 
     def register(self):
         def doRegister(transformer: ITransformer):
@@ -44,16 +47,17 @@ class TransManager:
         doRegister(DocumentRemover())
         doRegister(UnusedVariableRemover())
         doRegister(VariableRenamer())
-        # doRegister(VariableInliner())
 
     def parse(self, filename: str):
         try:
-            file = self.toFile(filename)
-            source = Source(file.name[1::], file.read())
+            file = self._toFile(filename)
+            _name = os.path.split(file.name)
+            source = Source(file.name.replace("\\", "/"), file.read())
             self.sources.append(source)
 
             module = ast.parse(source.getSources())
-            self.logger.debug(f"Find module in source {file.name} with {len(module.body)} ast objects.")
+            self.logger.debug(f"Find module in source {Fore.CYAN}{source.getFilename()}{Fore.RESET} "
+                              f"with {len(module.body)} ast objects.")
             self.modules[source] = module
 
             for transformer in self.transformers.values():
@@ -63,7 +67,7 @@ class TransManager:
             self.logger.debug(type(e).__name__, ": ", str(e))
 
     @staticmethod
-    def toFile(filename: str) -> TextIO:
+    def _toFile(filename: str) -> TextIO:
         # 添加更多的编码格式
         codecs = ["UTF-8", "UTF-16", "ISO-8859-1", "GBK", "ASCII"]
 
@@ -83,9 +87,11 @@ class TransManager:
             cycle += 1
             isFinish = True
 
-            self.logger.info(f"Transforming cycle: {cycle}")
-            with tqdm(total=len(self.transformers) * 4 * len(self.modules.items())) as progress:
+            self.logger.info(f"Transforming cycle: {Fore.LIGHTBLACK_EX}{cycle}")
+            with tqdm(total=len(self.transformers) * 4 * len(self.modules.items()), leave=False) as progress:
                 for source, module in self.modules.items():
+                    self.curSource = source
+
                     transformed = 0
                     for transformer in self.transformers.values():
                         if not transformer.checkLevel():
@@ -114,8 +120,6 @@ class TransManager:
                             isFinish = False
                             # progress.update((len(self.transformers) - transformed) * 4)
                             # break
-                self.modules[source] = module
-                # self.logger.debug(ast.unparse(module))
         self.logger.info("Transform done!")
 
         result: list[Source] = []
@@ -130,3 +134,6 @@ class TransManager:
                 existSources.add(filename)
 
         return result
+
+    def getCurrentSource(self) -> Optional[Source]:
+        return self.curSource
