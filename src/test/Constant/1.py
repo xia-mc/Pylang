@@ -9,6 +9,7 @@ def main():
     pass
     pass
     pass
+    abs(1)
 
 
 def func1():

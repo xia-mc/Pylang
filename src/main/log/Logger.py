@@ -1,4 +1,3 @@
-import ast
 import sys
 import time
 from typing import TextIO
@@ -6,7 +5,6 @@ from typing import TextIO
 import tqdm
 import colorama
 from colorama import Fore, Style
-from ast import AST
 
 import Const
 from log.LogLevel import LogLevel
@@ -16,8 +14,8 @@ colorama.init(autoreset=True)
 
 
 class Logger:
-    _UNDERLINE = "\033[4m"
-    _RESET = "\033[0m"
+    UNDERLINE = "\033[4m"
+    RESET = "\033[0m"
 
     def __init__(self, level: LogLevel, file: TextIO | None = None):
         """
@@ -77,32 +75,6 @@ class Logger:
         :param message: The message(s) to log.
         """
         self.log(LogLevel.CRITICAL, *message)
-
-    def flag(self, message: str, node: AST = None) -> None:
-        """
-        Log a warning with a specific message format for possible exceptions.
-
-        :param message: The exception details.
-        :param node: the AST object visiting
-        """
-        source = Const.transManager.getCurrentSource()
-        extraMsg = "?"
-        if node is not None:
-            extraMsg = str(node.lineno)
-            extraMsg += '\n' + Fore.CYAN
-
-            codeLine = source.getSourceLines()[node.lineno - 1]
-            flagBlock = ast.unparse(node)
-            codeLine = codeLine.replace(
-                flagBlock,
-                Fore.LIGHTCYAN_EX + self._UNDERLINE + flagBlock + self._RESET + Fore.CYAN)
-            extraMsg += codeLine
-
-        self.warn(f"{Fore.YELLOW}Possible exception in "
-                  f"{Fore.CYAN}{source.getFilename()}"
-                  f"{Fore.RESET}:"
-                  f"{Fore.CYAN}{extraMsg}"
-                  f"\n{Fore.RED}{message}.")
 
     def log(self, level: LogLevel, *message: object) -> None:
         """

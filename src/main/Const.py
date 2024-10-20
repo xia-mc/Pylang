@@ -12,4 +12,4 @@ transManager: TransManager
 logger: Logger
 
 # TODO We should make them into the optimize config file
-LOOP_UNFOLDING_MAX_LINES = 5000
+LOOP_UNFOLDING_MAX_LINES = 10000

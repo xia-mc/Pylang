@@ -27,10 +27,12 @@ class LoopUnfolding(ITransformer):
 
             if step == 0:
                 # it will result a value error in runtime
-                self.logger.flag("ValueError: range() arg 3 must not be zero.", node.iter)
-                return node
+
+                # why pycharm flags this as 'wrong type'
+                self.flag("ValueError: range() arg 3 must not be zero.", node.iter)
+                return self.generic_visit(node)
             if ((end - start) // step) * len(node.body) > Const.LOOP_UNFOLDING_MAX_LINES:
-                return node
+                return self.generic_visit(node)
 
             body = []
 

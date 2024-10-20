@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 import Const
 from log.Logger import Logger
+from transformers.impl.O2.FunctionComputer import FunctionComputer
 from utils.Source import Source
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O0.DocumentRemover import DocumentRemover
@@ -47,6 +48,7 @@ class TransManager:
         doRegister(DocumentRemover())
         doRegister(UnusedVariableRemover())
         doRegister(VariableRenamer())
+        doRegister(FunctionComputer())
 
     def parse(self, filename: str):
         try:
@@ -87,8 +89,11 @@ class TransManager:
             cycle += 1
             isFinish = True
 
-            self.logger.info(f"Transforming cycle: {Fore.LIGHTBLACK_EX}{cycle}")
-            with tqdm(total=len(self.transformers) * 4 * len(self.modules.items()), leave=False) as progress:
+            with tqdm(
+                    total=len(self.transformers) * 4 * len(self.modules.items()),
+                    leave=False,
+                    desc=f"Transforming cycle: {cycle}"
+            ) as progress:
                 for source, module in self.modules.items():
                     self.curSource = source
 
@@ -98,19 +103,15 @@ class TransManager:
                             progress.update(4)
                             continue
 
-                        progress.set_description(f"{transformer.name}: Pre")
                         progress.update()
                         transformer.onPreTransform()
 
-                        progress.set_description(f"{transformer.name}: Visit")
                         progress.update()
                         module = transformer.visit(module)
 
-                        progress.set_description(f"{transformer.name}: Post")
                         progress.update()
                         transformer.onPostTransform()
 
-                        progress.set_description(f"{transformer.name}: Fixing-locations")
                         progress.update()
                         ast.fix_missing_locations(module)
 
