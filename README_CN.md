@@ -2,6 +2,9 @@
 
 [English](https://github.com/xia-mc/Pylang/blob/master/README.md)
 
+> [!NOTE]
+> Pylang 处于早期开发阶段，常见运行错误、崩溃和性能不佳的问题。请勿在任何项目中使用。
+
 **Pylang** 是一个基于抽象语法树（AST）的Python代码优化器，执行静态分析以提高代码效率。它旨在帮助Python开发者编写简洁、可维护的代码，同时通过优化减少运行时开销。
 
 ## 功能
@@ -27,7 +30,7 @@
     ```bash
     pip install -r requirements.txt
     ```
-3. 在你的Python项目上运行优化器：
+3. 在你的Python项目上运行优化器 (要求Python 3.12)：
     ```bash
     python Pylang.py <flags>
     ```
