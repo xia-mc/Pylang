@@ -30,7 +30,7 @@
     ```bash
     pip install -r requirements.txt
     ```
-3. 在你的Python项目上运行优化器 (要求Python 3.12)：
+3. 在你的Python项目上运行优化器 (要求Python 3.7+)：
     ```bash
     python Pylang.py <flags>
     ```

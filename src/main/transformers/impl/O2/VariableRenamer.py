@@ -1,5 +1,5 @@
 import random
-from ast import Global, Nonlocal, Store
+from ast import Global, Nonlocal, Store, FunctionDef
 from enum import Enum
 
 from transformers.ITransformer import ITransformer
@@ -33,6 +33,7 @@ class VariableRenamer(ITransformer):
     def _onPreTransform(self) -> None:
         # fun lol
         random.shuffle(VariableRenamer.NAME_MAP)
+        self.assigned = 0
 
     def visit_Name(self, node):
         match self.state:
@@ -63,14 +64,19 @@ class VariableRenamer(ITransformer):
         outerState = self.state
 
         self.state = State.NONE
-        self.bypassedVar.clear()
-        self.mapping.clear()
-        self.assigned = 0
+
+        for arg in node.args.args:
+            newName = self.generateName()
+            self.mapping[arg.arg] = newName
+            arg.arg = newName
+
         self.state = State.SEARCH
 
         for expr in node.body:
             if isinstance(expr, Global) or isinstance(expr, Nonlocal):
                 self.bypassedVar.update(expr.names)
+                continue
+            if isinstance(expr, FunctionDef):
                 continue
 
             self.generic_visit(expr)
@@ -82,7 +88,7 @@ class VariableRenamer(ITransformer):
         self.state = State.NONE
         self.bypassedVar = outerBypassed
         self.mapping = outerMapping
-        self.assigned = outerAssigned
+        # self.assigned = outerAssigned
         self.state = outerState
 
         return self.generic_visit(node)
@@ -112,4 +118,4 @@ class VariableRenamer(ITransformer):
             result = self.NAME_MAP[nextInt] + result
             count = (count - 1) // len(self.NAME_MAP)
 
-        return result
+        return result + "_"

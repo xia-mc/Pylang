@@ -35,7 +35,7 @@ optimizations that reduce runtime overhead.
     ```bash
     pip install -r requirements.txt
     ```
-3. Run the optimizer on your Python project (Python 3.12 require):
+3. Run the optimizer on your Python project (Python 3.7+ require):
     ```bash
     python Pylang.py <flags>
     ```

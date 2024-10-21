@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import os.path
+import time
 from ast import Module
 from typing import Type, TextIO, TYPE_CHECKING, Optional
 
@@ -85,6 +86,8 @@ class TransManager:
     def transform(self) -> list[Source]:
         cycle = 0
         isFinish = False
+        startTime = time.perf_counter()
+
         while not isFinish:
             cycle += 1
             isFinish = True
@@ -121,7 +124,7 @@ class TransManager:
                             isFinish = False
                             # progress.update((len(self.transformers) - transformed) * 4)
                             # break
-        self.logger.info("Transform done!")
+        self.logger.info(f"Transform done! Cost {time.perf_counter() - startTime:.3f}s")
 
         result: list[Source] = []
         for source, module in self.modules.items():
