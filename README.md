@@ -2,6 +2,10 @@
 
 [简体中文](https://github.com/xia-mc/Pylang/blob/master/README_CN.md)
 
+> [!NOTE]
+> Pylang is in an early development stage. Expect frequent errors, crashes, and poor performance. Please avoid using it in any projects.
+
+
 **Pylang** is a Python code optimizer based on Abstract Syntax Tree (AST) that performs static analysis to improve code
 efficiency. It is designed to allow Python developers to write clean, maintainable code while benefiting from
 optimizations that reduce runtime overhead.
@@ -31,7 +35,7 @@ optimizations that reduce runtime overhead.
     ```bash
     pip install -r requirements.txt
     ```
-3. Run the optimizer on your Python project:
+3. Run the optimizer on your Python project (Python 3.12 require):
     ```bash
     python Pylang.py <flags>
     ```
