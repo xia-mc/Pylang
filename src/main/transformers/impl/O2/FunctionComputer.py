@@ -28,7 +28,7 @@ class FunctionComputer(ITransformer):
                 result = None
 
             if result is not None:
-                self.done()
+                # self.done()
                 return result
 
         return self.generic_visit(node)

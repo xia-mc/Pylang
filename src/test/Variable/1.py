@@ -1,6 +1,6 @@
 def func():
     var2 = 0
-    print(var2)
+    print(bool(var2))
 
 
 if __name__ == '__main__':
