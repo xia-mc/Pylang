@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Optional
 
 from colorama import Fore
 
@@ -15,8 +16,9 @@ from transformers.TransManager import TransManager
 class Pylang:
     def __init__(self):
         Const.pylang = self
-        self.manager: TransManager | None = None
-        self.logger: Logger | None = None
+        self.manager: Optional[TransManager] = None
+        self.logger: Optional[Logger] = None
+        self.compilerPath: Optional[None] = None
 
     def main(self, *args: str):
         level = OptimizeLevel.O1
@@ -61,6 +63,9 @@ class Pylang:
                     case "-o":
                         outputPath = args[index + 1]
                         index += 1
+                    case "-compiler":
+                        self.compilerPath = args[index + 1]
+                        index += 1
                 index += 1
         except IndexError:
             pass
@@ -82,12 +87,10 @@ class Pylang:
 
         output = self.manager.transform()
         for source in output:
-            path = (outputPath + source.getFilename()[1::]).replace("\\", "/")
+            path = (outputPath + source.getFilepath()[1::]).replace("\\", "/")
             self.logger.debug(f"Write to {Fore.CYAN}{path}")
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w") as file:
-                file.write(source.getSources())
-        input("Press Enter to continue...")
+            source.writeToFile(path)
 
 
 if __name__ == "__main__":

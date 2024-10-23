@@ -20,9 +20,8 @@ class _PureFunction:
             return self._toAST(pyRes)
 
         try:
-            stmt: ast.stmt = ast.parse(str(pyRes)).body[0]
-            assert isinstance(stmt, Expr)
-            expr: Expr = stmt
+            expr = ast.parse(str(pyRes)).body[0]
+            assert isinstance(expr, Expr)
             return expr.value
         except (SyntaxError, AssertionError, TypeError, ValueError, Exception):
             return None

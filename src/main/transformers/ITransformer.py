@@ -7,19 +7,20 @@ from colorama import Fore
 
 import Const
 from log.Logger import Logger
-from utils.Source import Source
+from utils.source.CodeSource import CodeSource
 from ast import AST
 from transformers.OptimizeLevel import OptimizeLevel
 
 
 class ITransformer(NodeTransformer, ABC):
     @abstractmethod
-    def __init__(self, name: str, level: OptimizeLevel):
+    def __init__(self, name: str, level: OptimizeLevel, post: bool = False):
         self.logger = Const.logger
         self.name = name
         self.level = level
         self._changed = False
         self._flags: set[tuple[str, Optional[AST]]] = set()
+        self.post = post
 
     @final
     def done(self):
@@ -29,11 +30,11 @@ class ITransformer(NodeTransformer, ABC):
         return self._changed
 
     @final
-    def onRegister(self):
-        self._onRegister()
+    def init(self):
+        self._init()
 
     @final
-    def onParseModule(self, module: Module, source: Source):
+    def onParseModule(self, module: Module, source: CodeSource):
         self._onParseModule(module, source)
 
     @final
@@ -80,15 +81,15 @@ class ITransformer(NodeTransformer, ABC):
             extraMsg += codeLine
 
         self.logger.warn(f"{Fore.YELLOW}Possible exception in "
-                         f"{Fore.CYAN}{source.getFilename()}"
+                         f"{Fore.CYAN}{source.getFilepath()}"
                          f"{Fore.RESET}:"
                          f"{Fore.CYAN}{extraMsg}"
                          f"\n{Fore.RED}{message}.")
 
-    def _onRegister(self) -> None:
+    def _init(self) -> None:
         ...
 
-    def _onParseModule(self, module: Module, source: Source) -> None:
+    def _onParseModule(self, module: Module, source: CodeSource) -> None:
         ...
 
     def _onPreTransform(self) -> None:

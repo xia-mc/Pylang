@@ -60,6 +60,4 @@ python ./src/main/Pylang.py -D ./src/test -O2
 此项目得益于以下工具和平台的支持：
 
 - **[PyCharm](https://www.jetbrains.com/pycharm/)**：为提供了一个出色的集成开发环境，使开发过程更加顺畅高效。
-- **[ChatGPT](https://openai.com/chatgpt/)**：在解决问题、提供代码建议以及开发过程中的宝贵见解方面提供了帮助。
-- **[CodeGeeX](https://www.codegeex.cn/)**：通过AI增强代码编写体验，并提供了有用的代码自动补全功能。
 - **[CPython](https://github.com/python/cpython)**：作为Python的核心，提供了强大的运行时环境，使得Pylang得以构建和运行。

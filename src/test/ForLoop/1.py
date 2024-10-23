@@ -1,8 +1,11 @@
 import timeit
 
+from pylang_annotations import native
+
 _: int
 
 
+@native
 def benchmark_for():
     global _
     counter = 0

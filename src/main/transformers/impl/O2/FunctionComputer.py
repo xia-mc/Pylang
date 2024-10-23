@@ -1,12 +1,10 @@
 import ast
 from ast import Constant, Name, Load, UnaryOp, Not, JoinedStr, FormattedValue, List, Set, Dict, Tuple
-from typing import Optional, Any, Iterable
-
-from numba import njit
+from typing import Optional, Iterable
 
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
-from utils.PureFunctions import PureFunctions
+from utils.eval.PureFunctions import PureFunctions
 
 
 class FunctionComputer(ITransformer):
@@ -47,7 +45,11 @@ class FunctionComputer(ITransformer):
     def handleConstant(func: str, args: list[Constant], kwargs: list[ast.keyword]) -> Optional[ast.expr]:
         # noinspection PyUnresolvedReferences
         # ensure isinstance(kw.value, Constant)
-        return PureFunctions.call(func, *(arg.value for arg in args), **{kw.arg: kw.value.value for kw in kwargs})
+        return PureFunctions.call(
+            func,
+            *(arg.value for arg in args),
+            **{kw.arg: kw.value.value for kw in kwargs}
+        )
 
     # noinspection PyTypeChecker
     @staticmethod

@@ -1,12 +1,10 @@
 import ast
-import copy
-import os.path
-from ast import Constant, Call, Name, Assign, Module, List, Load
+from ast import Constant, Call, Assign, Module
 
 import Const
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
-from utils.RangeUtils import RangeUtils
+from utils.eval.RangeUtils import RangeUtils
 
 
 class LoopUnfolding(ITransformer):

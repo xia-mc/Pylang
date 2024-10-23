@@ -3,7 +3,8 @@
 [简体中文](https://github.com/xia-mc/Pylang/blob/master/README_CN.md)
 
 > [!NOTE]
-> Pylang is in an early development stage. Expect frequent errors, crashes, and poor performance. Please avoid using it in any projects.
+> Pylang is in an early development stage. Expect frequent errors, crashes, and poor performance. Please avoid using it
+> in any projects.
 
 
 **Pylang** is a Python code optimizer based on Abstract Syntax Tree (AST) that performs static analysis to improve code
@@ -66,9 +67,5 @@ This project would not have been possible without the help of the following tool
 
 - **[PyCharm](https://www.jetbrains.com/pycharm/)**: For providing an excellent IDE that made the development process
   smooth and efficient.
-- **[ChatGPT](https://openai.com/chatgpt/)**: For assisting in problem-solving, code suggestions, and providing valuable
-  insights during the development process.
-- **[CodeGeeX](https://www.codegeex.cn/)**: For enhancing the code-writing experience and providing helpful AI-powered
-  code completion features.
 - **[CPython](https://github.com/python/cpython)**: The core of Python itself, which made this project possible by
   providing the powerful runtime environment on which Pylang is based.

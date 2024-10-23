@@ -31,8 +31,6 @@ class VariableRenamer(ITransformer):
         self.state = State.NONE
 
     def _onPreTransform(self) -> None:
-        # fun lol
-        random.shuffle(VariableRenamer.NAME_MAP)
         self.assigned = 0
 
     def visit_Name(self, node):
