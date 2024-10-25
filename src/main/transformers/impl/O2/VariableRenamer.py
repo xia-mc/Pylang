@@ -64,7 +64,9 @@ class VariableRenamer(ITransformer):
         self.state = State.NONE
 
         for arg in node.args.args:
-            newName = self.generateName()
+            # works wrongly when call with kwargs
+            # newName = self.generateName()
+            newName = arg.arg
             self.mapping[arg.arg] = newName
             arg.arg = newName
 

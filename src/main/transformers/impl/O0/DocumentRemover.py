@@ -8,18 +8,19 @@ class DocumentRemover(ITransformer):
     def __init__(self):
         super().__init__("DocumentRemover", OptimizeLevel.O0)
 
-    def visit_AnnAssign(self, node):
-        self.generic_visit(node)
-
-        self.done()
-        if node.value is not None:
-            assign_node = Assign(
-                targets=[node.target],
-                value=node.value
-            )
-            return assign_node
-        else:
-            return None
+    # work wrongly with @dataclass
+    # def visit_AnnAssign(self, node):
+    #     self.generic_visit(node)
+    #
+    #     self.done()
+    #     if node.value is not None:
+    #         assign_node = Assign(
+    #             targets=[node.target],
+    #             value=node.value
+    #         )
+    #         return assign_node
+    #     else:
+    #         return None
 
     def visit_FunctionDef(self, node):
         self.generic_visit(node)

@@ -16,9 +16,7 @@ from transformers.TransManager import TransManager
 class Pylang:
     def __init__(self):
         Const.pylang = self
-        self.manager: Optional[TransManager] = None
-        self.logger: Optional[Logger] = None
-        self.compilerPath: Optional[None] = None
+        self.compilerPath: Optional[str] = None
 
     def main(self, *args: str):
         level = OptimizeLevel.O1
@@ -74,21 +72,21 @@ class Pylang:
             print(e)
             exit(1)
 
-        self.logger = Logger(logLevel, open("latest.log", "w") if logToFile else None)
-        self.manager = TransManager(self.logger, level)
-        self.manager.register()
+        logger = Logger(logLevel, open("latest.log", "w") if logToFile else None)
+        manager = TransManager(logger, level)
+        manager.register()
 
-        self.logger.debug("Start parsing files.")
+        logger.debug("Start parsing files.")
         for filename in filenames:
             if not filename.endswith(".py"):
                 continue
-            self.manager.parse(filename)
-        self.logger.info(f"Parsed {len(self.manager.sources)} files.")
+            manager.parse(filename)
+        logger.info(f"Parsed {len(manager.sources)} files.")
 
-        output = self.manager.transform()
+        output = manager.transform()
         for source in output:
             path = (outputPath + source.getFilepath()[1::]).replace("\\", "/")
-            self.logger.debug(f"Write to {Fore.CYAN}{path}")
+            logger.debug(f"Write to {Fore.CYAN}{path}")
             os.makedirs(os.path.dirname(path), exist_ok=True)
             source.writeToFile(path)
 

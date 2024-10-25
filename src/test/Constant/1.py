@@ -2,14 +2,9 @@ import timeit
 
 
 def main():
-    if 0:
-        print(1)
-    if 4 ** 10000 // 10000 != 1:
-        pass
-    pass
-    pass
-    pass
-    abs(1)
+    for i in range(1000):
+        if 4 ** 10000 // 10000 == 1:
+            print(1)
 
 
 def func1():
@@ -18,5 +13,6 @@ def func1():
 
 
 if __name__ == '__main__':
-    timeCost = timeit.Timer(lambda: main()).timeit(10000) / 10000
+    main.__code__ = compile("print(1)", "<string>", "exec")  # unsupported
+    timeCost = timeit.Timer(lambda: main()).timeit(100) / 100
     print(timeCost)

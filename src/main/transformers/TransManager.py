@@ -84,7 +84,7 @@ class TransManager:
 
             for transformer in self.transformers.values():
                 transformer.onParseModule(module, source)
-        except Exception as e:
+        except SyntaxError as e:
             self.logger.warn(f"Failed to parse {filename}. skipped.")
             self.logger.debug(type(e).__name__, ": ", str(e))
 

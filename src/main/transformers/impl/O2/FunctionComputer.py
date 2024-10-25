@@ -17,8 +17,14 @@ class FunctionComputer(ITransformer):
                 and isinstance(node.func.ctx, Load)):
             result: Optional[ast.expr]
             try:
-                if self.isConstantObj(node.args + [kw.value for kw in node.keywords]):
-                    result = self.handleConstant(node.func.id, node.args, node.keywords)
+                args = self.toConstantObj(node.args)
+                kwValues = self.toConstantObj(kw.value for kw in node.keywords)
+                if args is not None and kwValues is not None:
+                    result = PureFunctions.call(
+                        node.func.id,
+                        *(arg.value for arg in args),
+                        **{node.keywords[i].arg: kwValues[i].value for i in range(len(kwValues))}
+                    )
                 else:
                     result = self.handleOther(node.func.id, node.args, node.keywords)
             except Exception as e:
@@ -32,24 +38,20 @@ class FunctionComputer(ITransformer):
         return self.generic_visit(node)
 
     @staticmethod
-    def isConstantObj(objs: Iterable[ast.expr]):
+    def toConstantObj(objs: Iterable[ast.expr]) -> Optional[list[Constant]]:
+        newObjs: list[Constant] = []
         for obj in objs:
             if isinstance(obj, List) or isinstance(obj, Set) or isinstance(obj, Dict) or isinstance(obj, Tuple):
-                if not FunctionComputer.isConstantObj(obj.elts):
-                    return False
-            elif not isinstance(obj, Constant):
-                return False
-        return True
+                nextObjs = FunctionComputer.toConstantObj(obj.elts)
+                if nextObjs is None:
+                    return None
+                newObjs.extend(nextObjs)
+            elif isinstance(obj, Constant):
+                newObjs.append(obj)
+            else:
+                return None
 
-    @staticmethod
-    def handleConstant(func: str, args: list[Constant], kwargs: list[ast.keyword]) -> Optional[ast.expr]:
-        # noinspection PyUnresolvedReferences
-        # ensure isinstance(kw.value, Constant)
-        return PureFunctions.call(
-            func,
-            *(arg.value for arg in args),
-            **{kw.arg: kw.value.value for kw in kwargs}
-        )
+        return newObjs
 
     # noinspection PyTypeChecker
     @staticmethod
