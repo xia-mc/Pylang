@@ -1,6 +1,8 @@
 from ast import Global, Nonlocal, Constant, Name, Store, Load, stmt, Pass, Del
 from enum import Enum
 
+from pyfastutil.objects import ObjectArrayList
+
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 
@@ -25,7 +27,7 @@ class UnusedVariableRemover(ITransformer):
         self.firstAssignedVar: set[str] = set()
         self.usedVar: set[str] = set()
 
-        self.newBody: list[stmt] = []
+        self.newBody: list[stmt] = ObjectArrayList()
         self.state: State = State.NONE
 
     def shouldBypass(self, name: str) -> bool:

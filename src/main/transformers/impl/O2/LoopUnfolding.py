@@ -1,6 +1,8 @@
 import ast
 from ast import Constant, Call, Assign, Module
 
+from pyfastutil.objects import ObjectArrayList
+
 import Const
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
@@ -32,7 +34,7 @@ class LoopUnfolding(ITransformer):
             if ((end - start) // step) * len(node.body) > Const.LOOP_UNFOLDING_MAX_LINES:
                 return self.generic_visit(node)
 
-            body = []
+            body = ObjectArrayList()
 
             for i in range(start, end, step):
                 targetAssign = Assign(targets=[node.target], value=Constant(value=i))

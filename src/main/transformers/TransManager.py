@@ -9,6 +9,7 @@ from ast import ImportFrom
 import pylang_annotations
 
 from colorama import Fore
+from pyfastutil.objects import ObjectArrayList
 from tqdm import tqdm
 
 import Const
@@ -34,7 +35,7 @@ class TransManager:
         Const.transManager = self
         self.logger = logger
         self.level = level
-        self.sources: list[Source] = []
+        self.sources: list[Source] = ObjectArrayList()
         # Raw sources from file. key: filename, value: Source object.
         self.modules: dict[CodeSource, Module] = {}
         self.transformers: dict[Type[ITransformer], ITransformer] = {}
@@ -166,18 +167,27 @@ class TransManager:
 
         self.logger.info(f"Transform done! Cost {time.perf_counter() - startTime:.3f}s")
 
-        result: list[Source] = []
-        for source, module in self.modules.items():
-            result.append(CodeSource(source.getFilepath(), ast.unparse(module)))
+        self.updateSources()
+        return self.sources
 
-        existSources = {e.getFilepath() for e in result}
+    def updateSources(self) -> None:
+        """
+        Update sources attr from modules
+        """
+        newSources: list[Source] = []
+        for source, module in self.modules.items():
+            code = ast.unparse(module)
+            newSources.append(CodeSource(source.getFilepath(), code))
+            source.setSources(code)
+
+        existSources = {e.getFilepath() for e in newSources}
         for source in self.sources:
             filename = source.getFilepath()
             if filename not in existSources:
-                result.append(source)
+                newSources.append(source)
                 existSources.add(filename)
 
-        return result
+        self.sources = newSources
 
     def getCurrentSource(self) -> Optional[CodeSource]:
         return self.curSource

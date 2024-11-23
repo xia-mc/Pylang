@@ -5,6 +5,7 @@ import sys
 from typing import Optional
 
 from colorama import Fore
+from pyfastutil.objects import ObjectArrayList
 
 import Const
 from log.LogLevel import LogLevel
@@ -22,7 +23,7 @@ class Pylang:
         level = OptimizeLevel.O1
         logLevel = LogLevel.INFO
         logToFile = False
-        filenames: list[str] = []
+        filenames: list[str] = ObjectArrayList()
         outputPath: str = r".\out"
 
         try:

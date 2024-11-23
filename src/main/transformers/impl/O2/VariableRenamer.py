@@ -2,6 +2,8 @@ import random
 from ast import Global, Nonlocal, Store, FunctionDef
 from enum import Enum
 
+from pyfastutil.objects import ObjectArrayList
+
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 
@@ -15,7 +17,7 @@ class State(Enum):
 class VariableRenamer(ITransformer):
     # mapping from number to name
     # noinspection SpellCheckingInspection
-    NAME_MAP: list[str] = list("abcdefghijklmnopqrstuvwxyz")
+    NAME_MAP: list[str] = ObjectArrayList("abcdefghijklmnopqrstuvwxyz")
 
     def __init__(self):
         super().__init__("VariableRenamer", OptimizeLevel.O2)

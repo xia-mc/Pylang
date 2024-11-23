@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from os import PathLike
 
 from utils.source.Source import Source, T
 

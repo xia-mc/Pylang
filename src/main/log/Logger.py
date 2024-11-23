@@ -26,15 +26,15 @@ class Logger:
         """
         Const.logger = self
         self.level = level
-        self.file = file
+        self.__file = file
 
     def __del__(self):
         """
         Destructor to ensure the file is closed if it was opened.
         """
-        if (self.file is not None) and (not self.file.closed):
-            self.file.close()
-            self.file = None
+        if (self.__file is not None) and (not self.__file.closed):
+            self.__file.close()
+            self.__file = None
 
     def debug(self, *message: object) -> None:
         """
@@ -84,7 +84,7 @@ class Logger:
         :param message: The message(s) to log.
         """
         if level >= self.level:
-            out = self._getOutput()
+            out = self.getOutput()
             timeStr = time.strftime("%H:%M:%S", time.localtime())
 
             # Select color based on log level
@@ -96,14 +96,14 @@ class Logger:
                     out.write(str(msg))
                 out.write(Style.RESET_ALL + "\n")
 
-    def _getOutput(self) -> TextIO:
+    def getOutput(self) -> TextIO:
         """
         Get the output stream for logging.
 
         :return: The file object to which logs will be written, or stdout if no file is provided.
         """
-        if self.file is not None:
-            return self.file
+        if self.__file is not None:
+            return self.__file
         else:
             return sys.stdout
 

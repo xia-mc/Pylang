@@ -1,5 +1,7 @@
 from ast import Str, Expr, Pass, Assign
 
+from pyfastutil.objects import ObjectArrayList
+
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 
@@ -49,7 +51,7 @@ class DocumentRemover(ITransformer):
             self.done()
             node.returns = None
 
-        newBody = []
+        newBody = ObjectArrayList()
         for stmt in node.body:
             if not isinstance(stmt, Expr) or not isinstance(stmt.value, Str):
                 newBody.append(stmt)
