@@ -2,11 +2,11 @@ import keyword
 import os
 import subprocess
 import sys
-from io import StringIO
 from pathlib import Path
-from typing import Sequence, Optional, TextIO
+from typing import Sequence, Optional
 
 import Cython.Build
+from pylang_annotations import native
 from setuptools import setup
 
 import Const
@@ -14,6 +14,7 @@ from utils.source.CodeSource import CodeSource
 from utils.source.NativeSource import NativeSource
 
 
+@native
 class SetupModule:
     def __init__(self, compiler: str, modules: list[str], argv: list[str]):
         self.modules = modules
@@ -27,10 +28,15 @@ class SetupModule:
         )
 
 
+@native
 class CythonCompiler:
 
     def __init__(self, compilerPath: str):
-        self.compilerPath: str = compilerPath
+        if compilerPath == "cl":
+            self.compilerPrefix: str = compilerPath + " /O2 /GL"
+        elif compilerPath in ("gcc", "clang"):
+            self.compilerPrefix: str = compilerPath + " -Ofast"
+        self.generatedNames: set[str] = set()
 
     @staticmethod
     def checkCompiler() -> Optional[str]:
@@ -55,21 +61,22 @@ class CythonCompiler:
             return False
         return True
 
-    @staticmethod
-    def _getNewName(original: str, existsName: set[str]) -> str:
+    def _getNewName(self, original: str, existsName: set[str]) -> str:
         """
         Generate a new valid import name for the given original name.
         This is an internal method, so no docstring is strictly necessary.
         """
         name: str = original
         for i in range(1000):
-            importName = name + "_native"
+            if i > 0:
+                importName = f"Native_{name}_{i}"
+            else:
+                importName = f"Native_{name}"
 
             if (CythonCompiler.isValidImportName(importName)
-                    and importName not in existsName):
+                    and importName not in existsName and importName not in self.generatedNames):
+                self.generatedNames.add(importName)
                 return importName
-
-            name = f"_{i}_{name}"
 
         raise RuntimeError(f"Failed to generate a valid import name for '{original}'")
 
@@ -80,7 +87,8 @@ class CythonCompiler:
         try:
             newName = self._getNewName(filename.removesuffix(".py"), set() if existsName is None else existsName)
         except RuntimeError:
-            return None
+            raise ValueError("Fail to generate native lib name.")
+
         pyxPath = Path(cacheFolder, f"{newName}.pyx")
 
         os.makedirs(cacheFolder, exist_ok=True)
@@ -89,7 +97,7 @@ class CythonCompiler:
         # do compile
         Const.logger.info(f"Compiling {source.getFilename()} as native module...")
         setupModule = SetupModule(
-            self.compilerPath,
+            self.compilerPrefix,
             [str(pyxPath)],
             ["build_ext", f"--build-lib={cacheFolder}"]
         )

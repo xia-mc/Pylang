@@ -30,7 +30,7 @@ class NativeConvertor(ITransformer):
         else:
             self.logger.warn(f"C compiler not available, native optimization will be skipped.")
             return
-        self.logger.info(f"Use C compiler: '{self.compiler.compilerPath}'.")
+        self.logger.info(f"Use C compiler: '{self.compiler.compilerPrefix}'.")
 
     def _onPreTransform(self) -> None:
         self.funcName.clear()
@@ -92,7 +92,7 @@ class NativeConvertor(ITransformer):
         try:
             compiled = self.compiler.compile(source, self.existsName)
         except (IOError, Exception) as e:
-            self.logger.debug("Exception while compiling: ", e)
+            self.logger.debug("Exception while compiling: ", repr(e))
 
         if compiled is None:
             self.logger.warn(f"Fail to compile {source.getFilename()}, skipped.")

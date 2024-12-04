@@ -1,5 +1,4 @@
-import random
-from ast import Global, Nonlocal, Store, FunctionDef, Name
+from ast import Global, Nonlocal, Store, FunctionDef
 from enum import Enum
 
 from pyfastutil.objects import ObjectArrayList

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import ast
 import time
-from ast import Module
-from typing import Type, TextIO, TYPE_CHECKING, Optional
 from ast import ImportFrom, Import
+from ast import Module
+from typing import Type, TextIO, TYPE_CHECKING, Optional, TypeVar
 
 from colorama import Fore
 from pyfastutil.objects import ObjectArrayList
@@ -12,21 +12,20 @@ from tqdm import tqdm
 
 import Const
 from log.Logger import Logger
-from transformers.impl.O2.FunctionComputer import FunctionComputer
-from transformers.impl.O3.NativeConvertor import NativeConvertor
-from transformers.impl.O3.PredictEngineImpl import PredictEngineImpl
-from utils.source.CodeSource import CodeSource
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O0.DocumentRemover import DocumentRemover
 from transformers.impl.O1.ConstantFolding import ConstantFolding
 from transformers.impl.O1.DeadCodeElimination import DeadCodeElimination
+from transformers.impl.O2.FunctionComputer import FunctionComputer
 from transformers.impl.O2.LoopUnfolding import LoopUnfolding
-from transformers.impl.O2.UnusedVariableRemover import UnusedVariableRemover
 from transformers.impl.O2.VariableRenamer import VariableRenamer
+from transformers.impl.O3.NativeConvertor import NativeConvertor
+from utils.source.CodeSource import CodeSource
 from utils.source.Source import Source
 
 if TYPE_CHECKING:
     from transformers.ITransformer import ITransformer
+    T = TypeVar("T", bound=ITransformer)
 
 
 class TransManager:
@@ -37,7 +36,7 @@ class TransManager:
         self.sources: list[Source] = ObjectArrayList()
         # Raw sources from file. key: filename, value: Source object.
         self.modules: dict[CodeSource, Module] = {}
-        self.transformers: dict[Type[ITransformer], ITransformer] = {}
+        self.transformers: dict[Type[T], T] = {}
 
         # state while transforming
         self.curSource: Optional[CodeSource] = None
@@ -56,7 +55,7 @@ class TransManager:
         doRegister(VariableRenamer())
         doRegister(FunctionComputer())
         doRegister(NativeConvertor())
-        doRegister(PredictEngineImpl())
+        # doRegister(PredictEngineImpl())
 
     def parse(self, filename: str):
         def checkModule(mod: Module) -> bool:

@@ -104,10 +104,12 @@ class PredictEngine(ITransformer, ABC):
         if name in self.__builtins:
             return self.__builtins[name]
         self.throw(NameError(f"'{name}' is not defined."))
+        return Variable(PyUnknown(self), object)
 
     def throw(self, exception: PyObject | Exception) -> None:
         if isinstance(exception, Exception):
             self.throw(ASTUtils.toPyObject(self, exception))
+            return None
 
         for handlers in reversed(self.__exceptStack):
             if exception not in handlers:
@@ -115,8 +117,9 @@ class PredictEngine(ITransformer, ABC):
             handler = handlers[exception]
             self.interruptManager.throw(exception, handler[0], handler[1])
             return None
+        self.interruptManager.finish()
         self.interruptManager.throw(exception, None, None)  # stop simulation
-        self.flag(f"(Simulation) {exception.type().__name__}: {str(exception.toObject())}", self.visiting)
+        self.flag(f"(Simulation) {exception.type().__name__}: {str(exception)}", self.visiting)
         return None
 
     def _onPreTransform(self) -> None:
