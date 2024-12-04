@@ -1,9 +1,11 @@
 import ast
+import typing
 from ast import Constant
 from typing import Optional, Any
 
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
+from utils.ASTUtils import ASTUtils
 
 
 class ConstantFolding(ITransformer):
@@ -27,7 +29,7 @@ class ConstantFolding(ITransformer):
                 and len(node.ops) == 1
                 and len(node.comparators) == 1 and isinstance(node.comparators[0], Constant)):
             left = node.left.value
-            right = node.comparators[0].value
+            right = typing.cast(Constant, node.comparators[0]).value
 
             result: Optional[bool] = None
             try:
@@ -54,7 +56,7 @@ class ConstantFolding(ITransformer):
                         result = left not in right
             except Exception as e:
                 self.flag(e, node)
-                result = None
+                return ASTUtils.raiseExpr(e)
 
             if result is not None:
                 self.done()
@@ -98,7 +100,7 @@ class ConstantFolding(ITransformer):
                         result = left - right
             except Exception as e:
                 self.flag(e, node)
-                result = None
+                return ASTUtils.raiseExpr(e)
 
             if result is not None:
                 self.done()

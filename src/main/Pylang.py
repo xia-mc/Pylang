@@ -20,6 +20,7 @@ class Pylang:
         self.compilerPath: Optional[str] = None
 
     def main(self, *args: str):
+        print("Starting...")
         level = OptimizeLevel.O1
         logLevel = LogLevel.INFO
         logToFile = False

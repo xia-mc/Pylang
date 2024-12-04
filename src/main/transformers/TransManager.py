@@ -4,9 +4,7 @@ import ast
 import time
 from ast import Module
 from typing import Type, TextIO, TYPE_CHECKING, Optional
-from ast import ImportFrom
-
-import pylang_annotations
+from ast import ImportFrom, Import
 
 from colorama import Fore
 from pyfastutil.objects import ObjectArrayList
@@ -16,6 +14,7 @@ import Const
 from log.Logger import Logger
 from transformers.impl.O2.FunctionComputer import FunctionComputer
 from transformers.impl.O3.NativeConvertor import NativeConvertor
+from transformers.impl.O3.PredictEngineImpl import PredictEngineImpl
 from utils.source.CodeSource import CodeSource
 from transformers.OptimizeLevel import OptimizeLevel
 from transformers.impl.O0.DocumentRemover import DocumentRemover
@@ -42,6 +41,7 @@ class TransManager:
 
         # state while transforming
         self.curSource: Optional[CodeSource] = None
+        self.curModule: Optional[Module] = None
 
     def register(self):
         def doRegister(transformer: ITransformer):
@@ -52,19 +52,20 @@ class TransManager:
         doRegister(DeadCodeElimination())
         doRegister(LoopUnfolding())
         doRegister(DocumentRemover())
-        doRegister(UnusedVariableRemover())
+        # doRegister(UnusedVariableRemover())  # unstable, can't eval class correctly
         doRegister(VariableRenamer())
         doRegister(FunctionComputer())
         doRegister(NativeConvertor())
+        doRegister(PredictEngineImpl())
 
     def parse(self, filename: str):
         def checkModule(mod: Module) -> bool:
             try:
                 for expr in mod.body:
-                    if not isinstance(expr, ImportFrom):
+                    if not isinstance(expr, ImportFrom) and not isinstance(expr, Import):
                         return True
-                    if (expr.module == pylang_annotations.__name__
-                            or expr.module == pylang_annotations.features.__name__):
+                    if (isinstance(expr, ImportFrom) and
+                            expr.module == "pylang_annotations" and "skip_module" in expr.names):
                         return False
             except (AttributeError, Exception):
                 ...
@@ -91,7 +92,6 @@ class TransManager:
 
     @staticmethod
     def _toFile(filename: str) -> TextIO:
-        # 添加更多的编码格式
         codecs = ["UTF-8", "UTF-16", "ISO-8859-1", "GBK", "ASCII"]
 
         for codec in codecs:
@@ -119,8 +119,8 @@ class TransManager:
             ) as progress:
                 for source, module in self.modules.items():
                     self.curSource = source
+                    self.curModule = module
 
-                    transformed = 0
                     for transformer in self.transformers.values():
                         if (not transformer.checkLevel()) or transformer.post:
                             progress.update(4)
@@ -138,10 +138,11 @@ class TransManager:
                         progress.update()
                         ast.fix_missing_locations(module)
 
-                        transformed += 1
                         # Make sure there's nothing to optimize
                         if transformer.isChanged():
                             isFinish = False
+
+        self.logger.debug(f"General-Transform done in {cycle} cycle.")
 
         postTransformers: list[ITransformer] = [i for i in self.transformers.values() if i.post and i.checkLevel()]
         with tqdm(
@@ -174,7 +175,10 @@ class TransManager:
         """
         Update sources attr from modules
         """
-        newSources: list[Source] = []
+        if len(self.modules) == 0 and len(self.sources) == 0:
+            return
+
+        newSources: list[Source] = ObjectArrayList()
         for source, module in self.modules.items():
             code = ast.unparse(module)
             newSources.append(CodeSource(source.getFilepath(), code))
@@ -188,6 +192,10 @@ class TransManager:
                 existSources.add(filename)
 
         self.sources = newSources
+        self.curSource = next(filter(lambda s: s.getFilepath() == self.getCurrentSource().getFilepath(), self.sources))
 
     def getCurrentSource(self) -> Optional[CodeSource]:
         return self.curSource
+
+    def getCurrentModule(self) -> Optional[Module]:
+        return self.curModule

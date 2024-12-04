@@ -2,26 +2,32 @@ import keyword
 import os
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
-from typing import Sequence, Optional
+from typing import Sequence, Optional, TextIO
+
+import Cython.Build
+from setuptools import setup
 
 import Const
-from log.LogLevel import LogLevel
 from utils.source.CodeSource import CodeSource
 from utils.source.NativeSource import NativeSource
 
 
+class SetupModule:
+    def __init__(self, compiler: str, modules: list[str], argv: list[str]):
+        self.modules = modules
+        self.argv = argv
+        os.environ["CC"] = compiler
+
+    def compile(self) -> None:
+        setup(
+            ext_modules=Cython.Build.cythonize(self.modules),
+            script_args=self.argv
+        )
+
+
 class CythonCompiler:
-    CYTHON_SETUP = """import os
-from setuptools import setup
-from Cython.Build import cythonize
-
-os.environ["CC"] = "%compiler"
-
-setup(
-    ext_modules=cythonize(%modules)
-)
-"""
 
     def __init__(self, compilerPath: str):
         self.compilerPath: str = compilerPath
@@ -76,38 +82,18 @@ setup(
         except RuntimeError:
             return None
         pyxPath = Path(cacheFolder, f"{newName}.pyx")
-        setupPath = Path(cacheFolder, f"{newName}_setup.py")
 
         os.makedirs(cacheFolder, exist_ok=True)
         source.writeToFile(pyxPath)
-        with open(setupPath, "w") as f:
-            f.write(CythonCompiler.CYTHON_SETUP
-                    .replace("%modules", str([str(pyxPath)]))
-                    .replace("%compiler", self.compilerPath)
-                    )
 
         # do compile
-        cmd = [
-            sys.executable,
-            str(setupPath),
-            "build_ext",
-            f"--build-lib={cacheFolder}"
-        ]
-        Const.logger.debug("Compile with command: ", " ".join(cmd))
-        if Const.logger.level <= LogLevel.DEBUG:
-            subprocess.run(
-                cmd,  # Pass the command as a list
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-        else:
-            subprocess.run(
-                cmd,  # Pass the command as a list
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+        Const.logger.info(f"Compiling {source.getFilename()} as native module...")
+        setupModule = SetupModule(
+            self.compilerPath,
+            [str(pyxPath)],
+            ["build_ext", f"--build-lib={cacheFolder}"]
+        )
+        setupModule.compile()
 
         # find compiled file
         for compiledPath in Path(cacheFolder).iterdir():

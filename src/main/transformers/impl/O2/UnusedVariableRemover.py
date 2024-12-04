@@ -200,12 +200,12 @@ class UnusedVariableRemover(ITransformer):
         node.body = self.newBody
 
         # Remove useless pass
-        self.newBody = []
+        self.newBody = ObjectArrayList()
         for expr in node.body:
             if isinstance(expr, Pass) and len(node.body) > 1:
                 continue
             self.newBody.append(expr)
-        node.body = self.newBody
+        node.body = self.newBody.to_list()
 
         # Restore outer scope variables after processing the closure
         self.bypassedVar = outerBypassed

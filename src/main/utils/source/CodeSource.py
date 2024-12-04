@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from utils.source.Source import Source
@@ -26,3 +28,6 @@ class CodeSource(Source):
 
     def __hash__(self) -> int:
         return hash(self.__filepath)
+
+    def copy(self) -> CodeSource:
+        return CodeSource(self.__filepath, self.__sources)

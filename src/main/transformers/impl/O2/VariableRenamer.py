@@ -1,11 +1,12 @@
 import random
-from ast import Global, Nonlocal, Store, FunctionDef
+from ast import Global, Nonlocal, Store, FunctionDef, Name
 from enum import Enum
 
 from pyfastutil.objects import ObjectArrayList
 
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
+from utils.eval.CythonCompiler import CythonCompiler
 
 
 class State(Enum):
@@ -17,7 +18,7 @@ class State(Enum):
 class VariableRenamer(ITransformer):
     # mapping from number to name
     # noinspection SpellCheckingInspection
-    NAME_MAP: list[str] = ObjectArrayList("abcdefghijklmnopqrstuvwxyz")
+    NAME_MAP: list[str] = ObjectArrayList("Il")
 
     def __init__(self):
         super().__init__("VariableRenamer", OptimizeLevel.O2)
@@ -26,21 +27,21 @@ class VariableRenamer(ITransformer):
         # the mapping for variable names (old, new)
         self.mapping: dict[str, str] = {}
         # assigned names counter
-        self.assigned = 0
+        self.assigned = len(VariableRenamer.NAME_MAP) ** 5
         # TODO i need to fix it
-        self.inComp = False
+        self.ignoring = False
 
         self.state = State.NONE
 
     def _onPreTransform(self) -> None:
-        self.assigned = 0
+        self.assigned = len(VariableRenamer.NAME_MAP) ** 5
 
     def visit_Name(self, node):
         match self.state:
             case State.SEARCH:
                 if not isinstance(node.ctx, Store):
                     return self.generic_visit(node)
-                if self.inComp:
+                if self.ignoring:
                     return self.generic_visit(node)
                 if node.id in self.bypassedVar:
                     return self.generic_visit(node)
@@ -96,18 +97,21 @@ class VariableRenamer(ITransformer):
         return self.generic_visit(node)
 
     def visit_ListComp(self, node):
-        return self.handleComp(node)
+        return self.handleIgnore(node)
 
     def visit_SetComp(self, node):
-        return self.handleComp(node)
+        return self.handleIgnore(node)
 
     def visit_DictComp(self, node):
-        return self.handleComp(node)
+        return self.handleIgnore(node)
 
-    def handleComp(self, node):
-        self.inComp = True
+    def visit_Lambda(self, node):
+        return node
+
+    def handleIgnore(self, node):
+        self.ignoring = True
         self.generic_visit(node)
-        self.inComp = False
+        self.ignoring = False
         return node
 
     def generateName(self) -> str:
@@ -120,4 +124,4 @@ class VariableRenamer(ITransformer):
             result = self.NAME_MAP[nextInt] + result
             count = (count - 1) // len(self.NAME_MAP)
 
-        return result + "_"
+        return result if CythonCompiler.isValidImportName(result) else self.generateName()

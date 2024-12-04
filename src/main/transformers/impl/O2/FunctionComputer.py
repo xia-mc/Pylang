@@ -2,6 +2,8 @@ import ast
 from ast import Constant, Name, Load, UnaryOp, Not, JoinedStr, FormattedValue, List, Set, Dict, Tuple
 from typing import Optional, Iterable
 
+from pyfastutil.objects import ObjectArrayList
+
 from transformers.ITransformer import ITransformer
 from transformers.OptimizeLevel import OptimizeLevel
 from utils.eval.PureFunctions import PureFunctions
@@ -39,7 +41,7 @@ class FunctionComputer(ITransformer):
 
     @staticmethod
     def toConstantObj(objs: Iterable[ast.expr]) -> Optional[list[Constant]]:
-        newObjs: list[Constant] = []
+        newObjs: list[Constant] = ObjectArrayList()
         for obj in objs:
             if isinstance(obj, List) or isinstance(obj, Set) or isinstance(obj, Dict) or isinstance(obj, Tuple):
                 nextObjs = FunctionComputer.toConstantObj(obj.elts)
@@ -72,14 +74,15 @@ class FunctionComputer(ITransformer):
 
                 # see https://bilibili.com/video/BV1om4y1F7zv/?t=138
                 result = UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=args[0]))
-            case str.__name__:
-                if argsLen > 3:
-                    raise TypeError(f"str() takes at most 3 arguments ({argsLen} given)")
-                if argsLen == 1:
-                    result = JoinedStr(values=[FormattedValue(value=args[0], conversion=-1)])
-                elif kwargsLen == 1 and kwargs[0].arg == "object":
-                    result = JoinedStr(values=[FormattedValue(value=kwargs[0].value, conversion=-1)])
-                else:
-                    return None
+            # reason: unsafe
+            # case str.__name__:
+            #     if argsLen > 3:
+            #         raise TypeError(f"str() takes at most 3 arguments ({argsLen} given)")
+            #     if argsLen == 1:
+            #         result = JoinedStr(values=[FormattedValue(value=args[0], conversion=-1)])
+            #     elif kwargsLen == 1 and kwargs[0].arg == "object":
+            #         result = JoinedStr(values=[FormattedValue(value=kwargs[0].value, conversion=-1)])
+            #     else:
+            #         return None
 
         return result

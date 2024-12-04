@@ -57,7 +57,7 @@ class DocumentRemover(ITransformer):
                 newBody.append(stmt)
             else:
                 self.done()
-        node.body = newBody
+        node.body = newBody.to_list()
 
         if len(node.body) == 0:
             self.done()
@@ -67,13 +67,13 @@ class DocumentRemover(ITransformer):
     def visit_ClassDef(self, node):
         self.generic_visit(node)
 
-        newBody = []
+        newBody = ObjectArrayList()
         for stmt in node.body:
             if not isinstance(stmt, Expr) or not isinstance(stmt.value, Str):
                 newBody.append(stmt)
             else:
                 self.done()
-        node.body = newBody
+        node.body = newBody.to_list()
 
         if len(node.body) == 0:
             self.done()

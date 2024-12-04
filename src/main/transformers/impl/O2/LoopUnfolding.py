@@ -2,6 +2,7 @@ import ast
 from ast import Constant, Call, Assign, Module
 
 from pyfastutil.objects import ObjectArrayList
+from pylang_annotations import native
 
 import Const
 from transformers.ITransformer import ITransformer
@@ -9,6 +10,7 @@ from transformers.OptimizeLevel import OptimizeLevel
 from utils.eval.RangeUtils import RangeUtils
 
 
+@native
 class LoopUnfolding(ITransformer):
     def __init__(self):
         super().__init__("LoopUnfolding", OptimizeLevel.O2)
@@ -42,7 +44,7 @@ class LoopUnfolding(ITransformer):
                 body.extend(node.body)
 
             self.done()
-            return ast.copy_location(Module(body=body, type_ignores=[]), node)
+            return ast.copy_location(Module(body=body.to_list(), type_ignores=[]), node)
 
         return self.generic_visit(node)
 
